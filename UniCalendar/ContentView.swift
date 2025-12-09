@@ -1,61 +1,86 @@
-//
-//  ContentView.swift
-//  UniCalendar
-//
-//  Created by Doğukan Ogan on 9.12.2025.
-//
 
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    
+    @Query(sort: \Lesson.dayOfWeek) private var lessons: [Lesson]
+    
     var body: some View {
-        NavigationSplitView {
+        NavigationStack {
             List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                ForEach(lessons) { lesson in
+                    HStack {
+                        // süs diye mavi çizgi
+                        Rectangle()
+                            .fill(.blue)
+                            .frame(width: 4)
+                            .cornerRadius(2)
+                        
+                        VStack(alignment: .leading) {
+                            Text(lesson.name)
+                                .font(.headline)
+                                .bold()
+                            
+                            HStack {
+                                Text("Gün: \(lesson.dayOfWeek)")
+                                Text("•")
+                                Text(formatTime(lesson.startTime))
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        }
                     }
+                    .padding(.vertical, 4)
                 }
                 .onDelete(perform: deleteItems)
             }
+            .navigationTitle("Ders Programım")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    Button(action: addTestLesson) {
+                        Label("Ekle", systemImage: "plus")
                     }
                 }
             }
-        } detail: {
-            Text("Select an item")
         }
     }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
+    
+    // for test
+    private func addTestLesson() {
+        let ornekDersler = ["Matematik", "Fizik", "101", "102", "psikoloji"]
+        
+        let yeniDers = Lesson(
+            name: ornekDersler.randomElement()!,
+            classroom: "NA02\(Int.random(in: 1...9))",
+            dayOfWeek: Int.random(in: 1...5),
+            startTime: Date(),
+            endTime: Date().addingTimeInterval(3600) // 1 hour later
+        )
+        
+        // save
+        modelContext.insert(yeniDers)
     }
-
+    
+    // slide left to delete
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
+                modelContext.delete(lessons[index])
             }
         }
+    }
+    
+    //
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: Lesson.self, inMemory: true)
 }
