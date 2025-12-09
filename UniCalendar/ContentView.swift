@@ -7,6 +7,8 @@ struct ContentView: View {
     
     @Query(sort: \Lesson.dayOfWeek) private var lessons: [Lesson]
     
+    @State private var showingAddLesson = false
+    
     var body: some View {
         NavigationStack {
             List {
@@ -39,28 +41,16 @@ struct ContentView: View {
             .navigationTitle("Ders Programım")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: addTestLesson) {
+                    Button(action: { showingAddLesson = true }) {
                         Label("Ekle", systemImage: "plus")
                     }
                 }
             }
+            // when showingAddLesson true, open up the page
+            .sheet(isPresented: $showingAddLesson) {
+                AddLessonView()
+            }
         }
-    }
-    
-    // for test
-    private func addTestLesson() {
-        let ornekDersler = ["Matematik", "Fizik", "101", "102", "psikoloji"]
-        
-        let yeniDers = Lesson(
-            name: ornekDersler.randomElement()!,
-            classroom: "NA02\(Int.random(in: 1...9))",
-            dayOfWeek: Int.random(in: 1...5),
-            startTime: Date(),
-            endTime: Date().addingTimeInterval(3600) // 1 hour later
-        )
-        
-        // save
-        modelContext.insert(yeniDers)
     }
     
     // slide left to delete
